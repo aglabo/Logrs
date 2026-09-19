@@ -10,6 +10,7 @@
 # default: ignore all files
 *
 
+### General Settings
 # Allow README, LICENSE, CONTRIBUTING
 !**/README.*
 !**/LICENSE.*
@@ -98,6 +99,16 @@
 !.vscode/cspell*
 !.vscode/cspell*/**
 
+
+## Project specific settings
+!logrs/
+!logrs/**
+!logrs/**/*.md
+
+# documents
+!docs/
+!docs/**
+!docs/**/*.md
 
 ##  Git
 # allow all gitignore
