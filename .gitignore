@@ -1,0 +1,104 @@
+# src: .gitignore
+# @(#) : main ignore settings (allowlist): Logrs
+#
+# Copyright (c) 2026- atsushifx <http://github.com/atsushifx>
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
+
+# default: ignore all files
+*
+
+# Allow README, LICENSE, CONTRIBUTING
+!**/README.*
+!**/LICENSE.*
+!**/CONTRIBUTING.*
+
+# Allow .github directories
+!.github/
+!.github/**
+
+# Allow other ignore
+!*ignore
+
+# Allow editorconfig
+!**/.editorconfig
+
+# Allow settings
+!**/settings.json
+
+## Root configs
+# package manager
+!/package.json
+!/pnpm-lock.yaml
+!/renovate.json
+
+# formatter
+!/dprint.jsonc
+
+# shell
+!/.shellspec
+!/lefthook.yml
+
+# misc
+!/.mcp.json
+
+# ChangeLogs
+!**/CHANGELOG.md
+!**/Release-Note.md
+
+
+##
+# config files
+!/configs/
+!/configs/**/
+!/configs/**/*.json
+!/configs/**/*.yml
+!/configs/**/*.yaml
+!/configs/**/*.toml
+!/configs/**/*.js
+!/configs/**/*.mjs
+
+# Scripts & Runners
+!/scripts/
+!/scripts/**/
+!/scripts/**/*.sh
+!/runners/
+!/runners/**/
+!/runners/**/*.sh
+
+
+
+## AI Agents
+# claude code
+!**/CLAUDE*.md
+# allowlist details: .claude/.gitignore
+!.claude/
+!.claude/agents/
+!.claude/agents/**/
+!.claude/agents/**/*.md
+!.claude/rules/
+!.claude/rules/**/
+!.claude/rules/**/*.md
+!.claude/skills/
+!.claude/skills/**/
+!.claude/skills/**/*.md
+!.claude/skills/**/*.sh
+
+
+##  Editor
+#   VSCode
+!.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+!.vscode/cspell*
+!.vscode/cspell*/**
+
+
+##  Git
+# allow all gitignore
+!**/.gitignore
