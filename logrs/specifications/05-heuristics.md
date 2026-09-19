@@ -1,7 +1,7 @@
 ---
 title: Part 3 — Heuristics -> "スタイル指針"
 description: 命名規則、レイアウトの慣習、実行文の運用指針
-version: 0.5.1
+version: 0.6.0
 update: 2026-09-20
 ---
 
