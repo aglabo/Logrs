@@ -1,0 +1,37 @@
+{
+  "name": "@aglabo/Logrs-lang",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Logrs : Language-Oriented Grammar for Rules & Semantics",
+  "keywords": [
+    "template",
+    "starter",
+    "oss",
+    "development"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aglabo/Logrs.git"
+  },
+  "license": "MIT",
+  "author": "atsushifx <https://github.com/atsushifx",
+  "type": "module",
+  "scripts": {
+    "prepare": "bash ./scripts/setup-dev-env.sh",
+    "scan:secrets": "concurrently \"betterleaks protect --config ./configs/betterleaks.toml\" \"secretlint --secretlintrc ./configs/secretlint.config.yaml .\"",
+
+    "check:dprint": "dprint check --list-different",
+    "check:dprint:diff": "dprint check",
+    "format:dprint": "dprint fmt",
+
+    "lint:spells": "cspell --config .vscode/cspell.json --cache --cache-location .cache/cspell/cSpellCache ",
+    "lint:text": "bash runners/run-textlint.sh ",
+    "lint:markdown": "bash runners/run-markdownlint.sh "
+  },
+  "packageManager": "pnpm@12.4.2",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=12.0.0"
+  },
+  "@(#)": "Logrs : Language-Oriented Grammar for Rules & Semantics"
+}
