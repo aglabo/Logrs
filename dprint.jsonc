@@ -13,8 +13,7 @@
   "useTabs": false,
   "newLineKind": "lf",
   // Include/Exclude patterns
-  "includes":
-  [
+  "includes": [
     // Programming languages
     "**/*.js",
     "**/*.ts",
