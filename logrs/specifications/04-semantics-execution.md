@@ -1,7 +1,7 @@
 ---
 title: Part 2 (後半) — 実行意味論
 description: 実行規約、実行順序、合成、イベントシステム、構文要素の意味、停止条件、フォールバック規則
-version: 0.6.0
+version: 0.7.0
 update: 2026-09-20
 ---
 
@@ -348,19 +348,16 @@ combined_constraint = and(composed_constraints)
 いずれかの制約に違反した場合、実行は禁止される
 <<<
 
-    note: <<<
-example (formal):
-  与件:
-<<<
-        /process {{
-          ! "処理を実行する"
-          constraint: ":session_phase == waiting"
-        }}
+    %example composition_constraint -> "制約の合成" {{
+      /process {{
+        ! "処理を実行する"
+        constraint: ":session_phase == waiting"
+      }}
 
-        +/process ^ {{
-          :prepared <- true
-          constraint: ":buffer が空でない"
-        }}
+      +/process ^ {{
+        :prepared <- true
+        constraint: ":buffer が空でない"
+      }}
 
       note: <<<
 結果:
@@ -369,8 +366,9 @@ composed_constraints = :session_phase == waiting, :buffer が空でない
   :session_phase == waiting かつ :buffer が空でない
 <<<
 
-    note: "制約は論理積で結合されるため、合成により制約は追加のみ可能で、"
-          note: <<<
+    }}
+    note: <<<
+制約は論理積で結合されるため、合成により制約は追加のみ可能で、
 既存の制約を緩和することはできません。
 <<<
 
@@ -424,13 +422,13 @@ composed_constraints = :session_phase == waiting, :buffer が空でない
 この分離が制御フローの予測可能性を保つ
 <<<
 
-    example permitted {{
+    %example permitted {{
       <-#ProcessInterrupted {{
         :session_phase <- :previous_mode    ; 復元のための使用
       }}
 
     }}
-    example forbidden {{
+    %example forbidden {{
       <-#SomeEvent {{
         :session_phase <- input             ; 通常フローはコマンドで行うべき
       }}
@@ -489,7 +487,7 @@ display_name : llm の出力・人間可読な文脈に使う
   - 人間可読な表示名が必要な任意の識別子
 <<<
 
-    example {{
+    %example alias_operator {{
       :session_phase {{
         command -> "コマンド"
         input   -> "入力"
@@ -814,9 +812,7 @@ Markdown の箇条書き形式 ("-" で始まる行)
 
     purpose: "同一ブロック内で定義と制約を自己記述する"
 
-    note: <<<
-example (formal):
-<<<
+    %example constraint_label -> "constraint ラベルの配置" {{
       priority {{
         note: <<<
 <レベルの説明>
@@ -826,6 +822,7 @@ example (formal):
 - 制約2
 <<<
       }}
+    }}
 
   }}
   rule constraint composition {{
@@ -887,14 +884,13 @@ llm が文脈と暗黙知から停止を判断する
     }}
     effect: "処理は、ユーザーが行動できるフィードバックを伴って穏当に終了する"
 
-    note: <<<
-example (formal):
-<<<
+    %example insufficient_information -> "情報不足時のプロトコル" {{
       (":buffer が空") {{
         !#ProcessFailed (error: "入力内容が空です")
         ! "Open Questions: 対象テキストを入力してください"
         :session_phase <- command
       }}
+    }}
 
     constraint safe_state_transition: "プロトコル完了後、:session_phase は command または waiting でなければならない"
 

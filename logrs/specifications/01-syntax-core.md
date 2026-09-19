@@ -1,7 +1,7 @@
 ---
 title: Part 1.1-1.2 — 記号体系と統一 BNF
-description: Logrs DSL v0.6.0 の記号表 (メタ記法 / オブジェクト言語)、空白非依存の字句規則、ABNF による統一文法
-version: 0.6.0
+description: Logrs DSL v0.7.0 の記号表 (メタ記法 / オブジェクト言語)、空白非依存の字句規則、ABNF による統一文法
+version: 0.7.0
 update: 2026-09-20
 ---
 
@@ -72,13 +72,13 @@ DSL を書くときに使う記号です。**すべての構造は記号が担�
 
 ##### sigil (対象種別)
 
-| 記号 | 役割         | 例                                                     |
-| ---- | ------------ | ------------------------------------------------------ |
-| `%`  | ブロック種別 | `%dsl` `%define` `%rule` `%input` `%output` `%profile` |
-| `/`  | コマンド     | `/begin` `/end`                                        |
-| `:`  | 変数         | `:buffer` `:session_phase`                             |
-| `#`  | イベント     | `#ProcessFailed`                                       |
-| `@`  | スコープ     | `@session` `@*`                                        |
+| 記号 | 役割         | 例                                                                |
+| ---- | ------------ | ----------------------------------------------------------------- |
+| `%`  | ブロック種別 | `%dsl` `%define` `%rule` `%input` `%output` `%profile` `%example` |
+| `/`  | コマンド     | `/begin` `/end`                                                   |
+| `:`  | 変数         | `:buffer` `:session_phase`                                        |
+| `#`  | イベント     | `#ProcessFailed`                                                  |
+| `@`  | スコープ     | `@session` `@*`                                                   |
 
 ##### 動作・合成・分岐
 
@@ -336,7 +336,7 @@ true | x & false    → true    ; | の左が true → 条件式全体を打ち�
 
 ```abnf
 ; ============================================================
-; Logrs DSL Unified Grammar - v0.6.0
+; Logrs DSL Unified Grammar - v0.7.0
 ; 以下はトークン列に対する文法である。
 ; 空白類 (SP / HTAB / LF / CR) とコメント (";" から改行まで) は
 ; 字句層で区切りとして除去され、本文法には現れない。
@@ -351,7 +351,7 @@ true | x & false    → true    ; | の左が true → 条件式全体を打ち�
 
 ; --- ブロック種別 (容器) ---
 <block-kind>      ::= "%" <identifier> [<identifier>] *<modifier> [<alias>]
-                      ; 標準: %dsl / %define / %rule / %input / %output / %profile
+                      ; 標準: %dsl / %define / %rule / %input / %output / %profile / %example
 
 ; --- 定義ターゲット ---
 <def-target>      ::= <command> / <variable> / <event> / <named-def>
@@ -378,6 +378,8 @@ true | x & false    → true    ; | の左が true → 条件式全体を打ち�
 <handler>         ::= "<-" "#" <identifier>
 <compose>         ::= "+" "/" <identifier> ("^" / "$")
 <guard>           ::= "(" [<condition>] ")"     ; 条件式なし = 既定分岐
+                      ; 既定分岐が先行する分岐を要することは
+                      ; ABNF では表現できない制約 (1.1.4 を参照)
 <condition>       ::= <term> *(("&" / "|") <term>)  ; "&" と "|" は同一優先度・左から順に評価
                       ; 短絡と打ち切りの範囲は 1.1.4 を参照 (ABNF では表現しない)
 <term>            ::= ["!"] <atom>                  ; "!" は直後の 1 項のみに作用
@@ -465,17 +467,34 @@ true | x & false    → true    ; | の左が true → 条件式全体を打ち�
 
 **v0.4.0 での統合**: v0.3.0 にあった `<logical-line>` `<content>` (物理行から論理行への前処理)、複数行形式とインライン形式に分かれていた `<block>`、終端を持たない `<exec>` `<nl-text>` `<label-line>` は、レイアウトが文法的な意味を失ったことですべて不要になりました。`<comment>` は文法から外れ、字句層の規則になりました。
 
-```text
-%rule {{
+#### 文法の自己記述について
 
-  bnf-formality {{
-    rule: <<<
+生成規則そのものは ABNF で記述し、**自己記述の対象外とします**。ABNF は本仕様が採る正規のメタ言語です ([1.1.1 メタ記法](#111-メタ記法-abnf--rfc-5234))。
+
+文法を DSL の構造として書き直すなら、選択・繰返・省略可能を表す語彙を別途定義しなければなりません。メタ言語を二重に持つことは避けます。
+
+`%dsl` が担うのは、言語の姿勢と **ABNF では表現できない制約** です。
+
+```text
+%dsl logrs -> "Logrs DSL" {{
+
+  metalanguage:      "ABNF (RFC 5234)"
+  normative_grammar: "01-syntax-core の 1.2 統一 BNF"
+
+  rule bnf formality: <<<
 本 BNF は以下の特性を持つ:
   - 厳密な BNF ではなく、llm の理解を支援する構造契約である
   - 実行順序・スコープライフタイム・モード遷移は part 2 で定義される
   - 文法的正当性と実行時意味は分離されている
 <<<
-  }}
+
+  rule grammar self description: "生成規則そのものは ABNF で記述し、自己記述の対象外とする"
+
+  constraint heredoc no nesting:        "heredoc 本文に終端記号 \"<<<\" を含めてはならない"
+  constraint default guard predecessor: "先行する分岐を持たない既定分岐 () は構文エラーである"
+  constraint label name lookahead:      "<label-def> / <rank-def> / <named-def> / <alias-line> の区別には \":\" \">>\" \"{{\" までの先読みを要する"
 
 }}
 ```
+
+**note**: 3 つの `constraint` の本文は heredoc ではなく **文字列リテラル** で書いています。`<<<` を含むテキストは heredoc に入れられませんが ([heredoc](#heredoc))、文字列リテラルの内部には字句規則がおよばないため書けます ([文字列リテラル](#文字列リテラル))。「heredoc に `<<<` を書けない」という制約を DSL で表明できるのは、この書き分けによります。

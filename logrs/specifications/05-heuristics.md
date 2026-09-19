@@ -1,7 +1,7 @@
 ---
 title: Part 3 — Heuristics -> "スタイル指針"
 description: 命名規則、レイアウトの慣習、実行文の運用指針
-version: 0.6.0
+version: 0.7.0
 update: 2026-09-20
 ---
 
@@ -231,7 +231,7 @@ v0.4.0 では指示を必ず文字列リテラルか heredoc で囲む。
 
 #### イベントハンドラによる状態遷移の誤用
 
-````text
+```text
 %rule {{
 
   anti_pattern event_handler_session_phase_misuse {{
@@ -248,33 +248,19 @@ problem_essence -> "問題の本質":
     forbidden_patterns -> "禁止パターン" {{
 
       pattern normal_flow_control {{
-        anti_pattern {{
-          note: <<<
-```text
-<<<
-          ; 禁止: イベントで状態遷移を実現する
+        %example anti_pattern -> "禁止: イベントで状態遷移を実現する" {{
           <-#UserInputReceived {{
             :session_phase <- input
           }}
-          note: <<<
-```
-<<<
-
         }}
-        correct_pattern {{
-          note: <<<
-```text
-<<<
-          ; 正しい: コマンドで状態遷移を実現する
+
+        %example correct_pattern -> "正しい: コマンドで状態遷移を実現する" {{
           /begin {{
             :session_phase <- input
             !#UserInputReceived
           }}
-          note: <<<
-```
-<<<
-
         }}
+
         rationale: <<<
 :session_phase の遷移はコマンドの責務である
 イベントを副作用として扱うべきではない
@@ -282,66 +268,38 @@ problem_essence -> "問題の本質":
 
       }}
       pattern conditional_branching {{
-        anti_pattern {{
-          note: <<<
-```text
-<<<
-          ; 禁止: ペイロードに応じた動的な :session_phase 選択
+        %example anti_pattern -> "禁止: ペイロードに応じた動的な :session_phase 選択" {{
           <-#ProcessCompleted {{
             ; 結果の内容に応じて :session_phase を変える
             :session_phase <- :next_mode
           }}
-          note: <<<
-```
-<<<
-
         }}
-        correct_pattern {{
-          note: <<<
-```text
-<<<
-          ; 正しい: コマンドで遷移先を明示的に決める
-          /process <target_mode> {{
+
+        %example correct_pattern -> "正しい: コマンドで遷移先を明示的に決める" {{
+          /process {{
             ! "処理実行"
-            :session_phase <- <target_mode>
+            :session_phase <- waiting
             !#ProcessCompleted (result: :result)
           }}
-          note: <<<
-```
-<<<
-
         }}
+
         rationale: ":session_phase の遷移規則を迂回すると状態機械の予測可能性が損なわれる"
 
       }}
       pattern arbitrary_transition {{
-        anti_pattern {{
-          note: <<<
-```text
-<<<
-          ; 禁止: 定義された遷移を無視した遷移
+        %example anti_pattern -> "禁止: 定義された遷移を無視した遷移" {{
           <-#CustomEvent {{
             :session_phase <- waiting    ; input => waiting (禁止された遷移) を実現している
           }}
-          note: <<<
-```
-<<<
-
         }}
-        correct_pattern {{
-          note: <<<
-```text
-<<<
-          ; 正しい: 定義された遷移経路を使う
+
+        %example correct_pattern -> "正しい: 定義された遷移経路を使う" {{
           /end {{
             :session_phase <- waiting
             !#InputCompleted
           }}
-          note: <<<
-```
-<<<
-
         }}
+
         rationale: <<<
 定義された遷移制約 (`=>`) を守ることが設計の一貫性を保証する
 <<<
@@ -353,31 +311,21 @@ problem_essence -> "問題の本質":
 <<<
       permitted_cases {{
         case abnormal_termination_recovery {{
-          note: <<<
-```text
-<<<
-          ; 許可: 異常終了からの復旧
-          <-#ProcessInterrupted {{
-            :session_phase <- :previous_mode   ; 中断前の状態へ戻す
-            @review        <- _
+          %example -> "許可: 異常終了からの復旧" {{
+            <-#ProcessInterrupted {{
+              :session_phase <- :previous_mode   ; 中断前の状態へ戻す
+              @scoped        <- _
+            }}
           }}
-          note: <<<
-```
-<<<
 
         }}
         case error_rollback {{
-          note: <<<
-```text
-<<<
-          ; 許可: エラー時のロールバック
-          <-#ProcessFailed {{
-            :session_phase <- command          ; 初期状態へ戻す
-            !#ErrorRecovered
+          %example -> "許可: エラー時のロールバック" {{
+            <-#ProcessFailed {{
+              :session_phase <- command          ; 初期状態へ戻す
+              !#ErrorRecovered
+            }}
           }}
-          note: <<<
-```
-<<<
 
         }}
       }}
@@ -408,6 +356,6 @@ step 3: "通常フローの制御に使われていれば、コマンドへの�
 
   }}
 }}
-````
+```
 
 **note**: v0.3.0 の「実務的ヒューリスティクス」(優先度決定ロジック、出力フォーマットの柔軟化) は、校閲レビュードメインに固有のため v0.4.0 で削除しました。コア仕様が固まったのち、プロファイルとしてあらためて定義する予定です。
