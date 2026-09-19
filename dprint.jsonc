@@ -1,0 +1,65 @@
+// src: ./dprint.jsonc
+// @(#) : dprint configuration for project formatting
+//
+// Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+  // Global settings
+  "lineWidth": 120,
+  "indentWidth": 2,
+  "useTabs": false,
+  "newLineKind": "lf",
+  // Include/Exclude patterns
+  "includes":
+  [
+    // Programming languages
+    "**/*.js",
+    "**/*.ts",
+    // Config files
+    "**/*.json",
+    "**/*.jsonc",
+    "**/*.yml",
+    "**/*.yaml",
+    "**/*.toml",
+    // Documents
+    "**/*.md",
+  ],
+  "excludes": [
+    "**/node_modules/**",
+    "**/*lock",
+    "**/lib/**",
+    "**/module/**",
+    "**/dist/**",
+    //
+    "**lock.*",
+    // Documents
+    "CONTRIBUTING**.md",
+    "CODE_OF_CONDUCT**.md",
+  ],
+  // Plugins
+  "plugins": [
+    "npm:@dprint/typescript@0.96.1",
+    "npm:@dprint/json@0.24.0",
+    "npm:@dprint/markdown@0.24.0",
+    "npm:dprint-plugin-yaml@0.6.0",
+    "npm:@dprint/toml@0.8.0",
+  ],
+  // Language-specific settings
+  "typescript": {
+    "indentWidth": 2,
+    "useTabs": false,
+    "quoteStyle": "preferSingle",
+    "preferSingleLine": false,
+    "useBraces": "always",
+    "arrowFunction.useParentheses": "force",
+    "trailingCommas": "onlyMultiLine",
+  },
+  "json": {},
+  "markdown": {
+    "emphasisKind": "asterisks",
+  },
+  "yaml": {},
+}
