@@ -1,7 +1,7 @@
 ---
 title: Part 3 — Heuristics -> "スタイル指針"
 description: 命名規則、レイアウトの慣習、実行文の運用指針
-version: 0.4.0
+version: 0.5.1
 update: 2026-09-20
 ---
 
@@ -245,7 +245,7 @@ problem_essence -> "問題の本質":
 意味論的には特定の目的にのみ許可される
 <<<
 
-    forbidden_patterns -> "禁止パターン":
+    forbidden_patterns -> "禁止パターン" {{
 
       pattern normal_flow_control {{
         anti_pattern {{
@@ -346,7 +346,8 @@ problem_essence -> "問題の本質":
 定義された遷移制約 (`=>`) を守ることが設計の一貫性を保証する
 <<<
       }}
-    permitted_patterns -> "許可パターン: 復旧・補正・ロールバック":
+    }}
+    permitted_patterns -> "許可パターン: 復旧・補正・ロールバック" {{
       semantics: <<<
 イベントハンドラ内での `:session_phase <- ...` はエラー回復のためだけに許可される
 <<<
@@ -380,6 +381,7 @@ problem_essence -> "問題の本質":
 
         }}
       }}
+    }}
     note: <<<
 guidelines -> "ガイドライン":
 guideline 1 normal_flow -> "通常フロー":

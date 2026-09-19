@@ -1,7 +1,7 @@
 ---
 title: Part 1.3 — メタブロック (構文的除外領域)
 description: DSL 定義を構文的に解釈対象外とし、自己再帰リスクを防ぐメタブロックの定義
-version: 0.4.0
+version: 0.5.1
 update: 2026-09-20
 ---
 

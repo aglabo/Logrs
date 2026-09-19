@@ -1,7 +1,7 @@
 ---
 title: Part 1.1-1.2 — 記号体系と統一 BNF
-description: Logrs DSL v0.4.0 の記号表 (メタ記法 / オブジェクト言語)、空白非依存の字句規則、ABNF による統一文法
-version: 0.4.0
+description: Logrs DSL v0.5.1 の記号表 (メタ記法 / オブジェクト言語)、空白非依存の字句規則、ABNF による統一文法
+version: 0.5.1
 update: 2026-09-20
 ---
 
@@ -299,7 +299,7 @@ true | x & false    → true    ; | の左が true → 条件式全体を打ち�
 
 ```abnf
 ; ============================================================
-; Logrs DSL Unified Grammar - v0.4.0
+; Logrs DSL Unified Grammar - v0.5.1
 ; 以下はトークン列に対する文法である。
 ; 空白類 (SP / HTAB / LF / CR) とコメント (";" から改行まで) は
 ; 字句層で区切りとして除去され、本文法には現れない。
@@ -321,9 +321,13 @@ true | x & false    → true    ; | の左が true → 条件式全体を打ち�
 <command>         ::= "/" <identifier> *<param> *<option> [<alias>]
 <variable>        ::= [<scope>] <var-name> ["<-" <value>] [<alias>]
 <event>           ::= "#" <identifier> [<payload>] [<alias>]
-<named-def>       ::= <identifier> [<identifier>] [<payload>] *<modifier> [<alias>]
+<named-def>       ::= <label-name> [<payload>] *<modifier> [<alias>]
                       ; sigil を持たない定義。例: enum priority / Record -> "…" /
-                      ;                        location 文章位置 / fallback ValidationFailed
+                      ;   location -> "文章位置" / fallback ValidationFailed /
+                      ;   rule composition constraint composition
+<label-name>      ::= <identifier> *(<identifier> / <number>)
+                      ; 見出し語の並び。先頭は識別子。例: constraint status values /
+                      ;   test_case 1
 
 <scope>           ::= "@" <identifier> / "@*"       ; 標準: @session
 <var-name>        ::= ":" <identifier>
@@ -360,8 +364,9 @@ true | x & false    → true    ; | の左が true → 条件式全体を打ち�
                       ; 実行時にしか決まらないため
 <operand>         ::= <var-name> / <identifier> / <value>
 <alias-line>      ::= <identifier> "->" <string-literal>
-<label-def>       ::= <identifier> ":" <value>      ; 値は省略できない。
+<label-def>       ::= <label-name> ":" <value>      ; 値は省略できない。
                       ; 値を持たない見出しはブロック (<named-def> "{{" … "}}") で書く
+                      ; <named-def> との区別には ":" / "{{" までの先読みを要する
 
 ; --- コマンドのパラメータ・オプション ---
 <param>           ::= "<" [":"] <identifier> ">"

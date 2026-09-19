@@ -1,7 +1,7 @@
 ---
 title: Part 2 (前半) — 意味論の基礎
 description: 構文と意味論の分離、値集合の意味論的検証、メタブロック意味論、コマンドエイリアス解決、note 意味論、コマンド実行制約、変数スコープ
-version: 0.4.0
+version: 0.5.1
 update: 2026-09-20
 ---
 
@@ -179,8 +179,8 @@ llm はメタブロックを以下の 3 段階で処理する:
 コマンドエイリアス正規化規則:
 <<<
 
-    (command が alias-map のキーに含まれる) {{
-      command <- alias-map[command]
+    ("command が alias-map のキーに含まれる") {{
+      ! "alias-map で command を解決した値に置き換える"
     }}
 
     note: <<<
@@ -267,21 +267,21 @@ v0.3.0 までこの位置にあった `acceptance 遷移` と `記事生成ス�
 %rule {{
 
   ; :session_phase 依存の実行制約
-  rule /begin: ":session_phase == command または :session_phase == waiting で実行しなければならない"
+  rule begin: "/begin は :session_phase == command または :session_phase == waiting で実行しなければならない"
 
-  rule /process: <<<
-:session_phase == waiting でのみ実行しなければならない
-:execute_mode == processing の間は再入してはならない
+  rule process: <<<
+/process は :session_phase == waiting でのみ実行しなければならない
+/process は :execute_mode == processing の間は再入してはならない
 <<<
 
-  rule /emit: <<<
-:session_phase == waiting でのみ実行しなければならない
-:execute_mode == processing の間は再入してはならない
+  rule emit: <<<
+/emit は :session_phase == waiting でのみ実行しなければならない
+/emit は :execute_mode == processing の間は再入してはならない
 <<<
 
-  rule /exit: <<<
-任意の :session_phase で実行できる
-:session_phase と :execute_mode の両方をリセットする
+  rule exit: <<<
+/exit は任意の :session_phase で実行できる
+/exit は :session_phase と :execute_mode の両方をリセットする
 <<<
 
   rule session_phase vs execute_mode separation {{
@@ -303,22 +303,24 @@ v0.3.0 までこの位置にあった `acceptance 遷移` と `記事生成ス�
     behavior command_execution {{
       precondition: ":session_phase == waiting かつ :execute_mode == idle"
 
-      (/process または /emit を受けた) {{
-        :execute_mode: idle => processing
+      ("/process または /emit を受けた") {{
+        :execute_mode <- processing
       }}
 
       invariant during_execution: ":session_phase は waiting のまま変化しない"
 
-      (処理が完了した) {{
-        :execute_mode: processing => idle
+      ("処理が完了した") {{
+        :execute_mode <- idle
         note: <<<
 :session_phase は waiting のまま
 <<<
       }}
 
     }}
-    note: "/process 実行時、:session_phase は waiting のまま変化せず、"
-          :execute_mode だけが idle => processing => idle と遷移します。
+    note: <<<
+/process 実行時、:session_phase は waiting のまま変化せず、
+:execute_mode だけが idle => processing => idle と遷移する
+<<<
 
   }}
 }}
@@ -330,12 +332,12 @@ v0.3.0 までこの位置にあった `acceptance 遷移` と `記事生成ス�
 %define {{
 
   ; @session スコープ: /exit でクリア
-  @session :role {{ clearby: /exit }}
-  @session :link {{ clearby: /exit }}
+  @session :role {{ clearby: "/exit" }}
+  @session :link {{ clearby: "/exit" }}
 
   ; @scoped スコープ: /begin でクリア
-  @scoped :buffer {{ clearby: /begin }}
-  @scoped :review {{ clearby: /begin }}
+  @scoped :buffer {{ clearby: "/begin" }}
+  @scoped :review {{ clearby: "/begin" }}
 
 }}
 ```

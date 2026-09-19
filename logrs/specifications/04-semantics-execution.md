@@ -1,7 +1,7 @@
 ---
 title: Part 2 (後半) — 実行意味論
 description: 実行規約、実行順序、合成、イベントシステム、構文要素の意味、停止条件、フォールバック規則
-version: 0.4.0
+version: 0.5.1
 update: 2026-09-20
 ---
 
@@ -44,12 +44,16 @@ i < j のとき def_i は def_j より先に評価されなければならない
 <<<
 
     semantics {{
-      (同一スコープに同名のコマンド定義が存在する): <<<
+      ("同一スコープに同名のコマンド定義が存在する") {{
+        ! <<<
 新しい定義を拒否する
 <<<
-      (): <<<
+      }}
+      () {{
+        ! <<<
 新しい定義を受理する
 <<<
+      }}
 
     }}
   }}
@@ -72,8 +76,8 @@ i < j のとき def_i は def_j より先に評価されなければならない
   }}
   rule var_initialization {{
     initialization_rule {{
-      (変数に明示的な初期値がない) {{
-        変数 <- ""    ; 空文字列
+      ("変数に明示的な初期値がない") {{
+        :var <- ""    ; 空文字列
       }}
 
     }}
@@ -124,9 +128,11 @@ llm が文脈に基づいて適切な解釈を決定する
       note: <<<
 停止条件:
 <<<
-        (明示的に定義されていない): <<<
+        ("明示的に定義されていない") {{
+          ! <<<
 llm が文脈から停止条件を推論する
 <<<
+        }}
 
     }}
     formality_boundary: <<<
@@ -309,16 +315,10 @@ rule composition priority extension (将来のための予約):
 
     current_behavior: "実行順は定義順のみで決まる"
 
-    reserved_syntax {{
-      +/cmd ^ --priority: <integer>: <<<
-<body>
+    reserved_syntax: <<<
++/cmd ^ --priority: <integer>: <body>
++/cmd $ --priority: <integer>: <body>
 <<<
-
-      +/cmd $ --priority: <integer>: <<<
-<body>
-<<<
-
-    }}
     reserved_semantics: <<<
 execution_order: priority 値の昇順に並べる
 higher_priority: lower_priority より先に実行する
@@ -478,8 +478,8 @@ display_name : llm の出力・人間可読な文脈に使う
 <<<
 
     usage {{
-      コード参照     => identifier を使う
-      llm の出力     => identifier より display_name を優先する
+      "コード参照"   => "identifier を使う"
+      "llm の出力"   => "identifier より display_name を優先する"
 
     }}
     applicability: <<<
@@ -597,9 +597,11 @@ incorrect_usage (例):
       essence: "priority は「同時に適用可能な規則どうしの衝突解決ヒューリスティクス」である"
 
       semantics {{
-        (複数の出力項目が衝突する): <<<
+        ("複数の出力項目が衝突する") {{
+          ! <<<
 優先度の高い観点を選ぶ
 <<<
+        }}
 
         note: <<<
 priority は評価の「重み」を表し、「順序」や「条件」ではない
@@ -648,7 +650,7 @@ rule     : 構造的制約を課す
   }}
 
   ; 出力フォーマット定義 (簡易版)
-  %output 処理結果 +location {{
+  %output result +location -> "処理結果" {{
     note: <<<
 %output ブロックは、コマンドが生成する出力の形を定義する。
 フィールドの並び・必須か任意か・値集合は、ドメインごとにプロファイルが定める。
@@ -672,7 +674,7 @@ format: "section_name.node_type[N][.sentence[M]]"
   }}
 
   ; 文書位置識別構造 (field / rule で要素定義)
-  location 文章位置 {{
+  location -> "文章位置" {{
     field section_id: "見出し[番号]"
     field node_type: "paragraph / list_item / heading / table / figure"
     rule sentence_delimiter: "句点 \"。\" / \"？\" / \"！\" / \":\""
@@ -780,14 +782,16 @@ not_applicable : 実行制御・意思決定
 <<<
 
     specification {{
-      (<any-text> を制御フローの判断に使った): <<<
+      ("<any-text> を制御フローの判断に使った") {{
+        semantics: <<<
 挙動は未定義とする
 結果は UndefinedBehavior となる
 <<<
+      }}
 
     }}
     formalization {{
-      control_flow_decision(<any-text>) => UndefinedBehavior
+      "control_flow_decision(<any-text>)" => UndefinedBehavior
 
     }}
   }}
@@ -851,12 +855,16 @@ combined = original_constraints and insert_constraints
 <<<
 
     behavior {{
-      (停止条件が明示されている): <<<
+      ("停止条件が明示されている") {{
+        ! <<<
 条件が満たされるまで実行する
 <<<
-      (): <<<
+      }}
+      () {{
+        ! <<<
 llm が文脈と暗黙知から停止を判断する
 <<<
+      }}
 
     }}
   }}
@@ -867,9 +875,7 @@ llm が文脈と暗黙知から停止を判断する
       note: <<<
 1. !#ProcessFailed を発火する
 2. 欠けている情報を「Open Questions」として出力する
-<<<
-      3. status <- incomplete
-      note: <<<
+3. :status <- incomplete
 4. :session_phase を安全な状態 (command または waiting) に戻す
 <<<
 
@@ -879,7 +885,7 @@ llm が文脈と暗黙知から停止を判断する
     note: <<<
 example (formal):
 <<<
-      (:buffer が空) {{
+      (":buffer が空") {{
         !#ProcessFailed (error: "入力内容が空です")
         ! "Open Questions: 対象テキストを入力してください"
         :session_phase <- command
@@ -928,7 +934,7 @@ fallback_strategy (優先順):
 
     }}
     exception forced_termination {{
-      (/exit コマンドを受けた) {{
+      ("/exit コマンドを受けた") {{
         @* <- _
         note: <<<
 すべての状態を初期値にリセットする
@@ -941,7 +947,7 @@ fallback_strategy (優先順):
   }}
   rule reproducibility_guarantee {{
     goal {{
-      同一の入力 + 同一のプロンプト => 同一の出力 (決定的な挙動)
+      "同一の入力 + 同一のプロンプト" => "同一の出力 (決定的な挙動)"
 
     }}
     constraint probabilistic_nature: "llm の確率的性質により、完全な再現性は保証されない"
@@ -1047,7 +1053,7 @@ llm が仕様を守らない場合の縮退動作を定義します。
 %define {{
 
   fallback ValidationFailed {{
-    generation-status <- incomplete
+    :generation-status <- incomplete
     !#ProcessFailed (error: "[UNRESOLVED:buffer]")
     :acceptance <- pending
     ! "Open Questions 出力: 必須情報が不足しています"
