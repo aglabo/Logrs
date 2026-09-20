@@ -1,0 +1,57 @@
+# src: ./.github/workflows/ci-spec-check.yml
+# @(#) : Logrs specification self-consistency check
+#
+# Copyright (c) 2026- atsushifx <https://github.com/atsushifx>
+#
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
+name: "CI Spec Check"
+
+# Minimal permissions following security best practices
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - releases
+    paths:
+      - "logrs/specifications/**"
+      - "scripts/check-spec-syntax.mjs"
+      - ".github/workflows/ci-spec-check.yml"
+
+  pull_request:
+    branches:
+      - main
+      - master
+      - releases
+    paths:
+      - "logrs/specifications/**"
+      - "scripts/check-spec-syntax.mjs"
+      - ".github/workflows/ci-spec-check.yml"
+
+  workflow_dispatch:
+
+jobs:
+  spec-check:
+    name: Spec Syntax Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: "24"
+
+      - name: Check specifications against the unified BNF
+        run: node scripts/check-spec-syntax.mjs

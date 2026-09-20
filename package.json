@@ -26,7 +26,9 @@
 
     "lint:spells": "cspell --config .vscode/cspell.json --cache --cache-location .cache/cspell/cSpellCache ",
     "lint:text": "bash runners/run-textlint.sh ",
-    "lint:markdown": "bash runners/run-markdownlint.sh "
+    "lint:markdown": "bash runners/run-markdownlint.sh ",
+
+    "check:specs": "node scripts/check-spec-syntax.mjs"
   },
   "packageManager": "pnpm@12.4.2",
   "engines": {

@@ -65,6 +65,8 @@
 !/scripts/
 !/scripts/**/
 !/scripts/**/*.sh
+!/scripts/**/*.js
+!/scripts/**/*.mjs
 !/runners/
 !/runners/**/
 !/runners/**/*.sh
