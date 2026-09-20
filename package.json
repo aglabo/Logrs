@@ -28,7 +28,11 @@
     "lint:text": "bash runners/run-textlint.sh ",
     "lint:markdown": "bash runners/run-markdownlint.sh ",
 
-    "check:specs": "node scripts/check-spec-syntax.mjs"
+    "check:specs": "node scripts/check-spec-syntax.mjs",
+
+    "lint:gha": "concurrently \"pnpm run lint:gha:actions\" \"pnpm run lint:gha:workflows\"",
+    "lint:gha:actions": "bash -c 'actionlint -config-file \"${XDG_CONFIG_HOME}/linters/ghalint/actionlint.yaml\"'",
+    "lint:gha:workflows": "bash -c 'ghalint run --config \"${XDG_CONFIG_HOME}/linters/ghalint/ghalint.yaml\"'"
   },
   "packageManager": "pnpm@12.4.2",
   "engines": {
