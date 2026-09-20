@@ -1,7 +1,7 @@
 ---
 title: Part 0 — Overview
 description: Logrs DSL の設計原則、半形式仕様としての位置づけ、規範と例示の区別、Backbone BNF、最小使用例
-version: 0.7.0
+version: 0.8.0
 update: 2026-09-20
 ---
 
@@ -13,7 +13,7 @@ update: 2026-09-20
 
 ## Part 0: Overview
 
-Logrs DSL は、**ドメインの構造を記述するための汎用言語** です。対象とするドメインを持たず、コマンド・変数・イベント・値集合・出力形式を定義する枠だけを提供します。特定ドメインの語彙は、コア仕様の上に置くプロファイルが定義します。プロファイルはコア仕様の確定後にあらためて作成する予定で、v0.7.0 時点では同梱していません。
+Logrs DSL は、**ドメインの構造を記述するための汎用言語** です。対象とするドメインを持たず、コマンド・変数・イベント・値集合・出力形式を定義する枠だけを提供します。特定ドメインの語彙は、コア仕様の上に置くプロファイルが定義します。プロファイルはコア仕様の確定後にあらためて作成する予定で、v0.8.0 時点では同梱していません。
 
 ### 半形式仕様としての位置づけ
 
@@ -82,7 +82,8 @@ Logrs DSL は、**ドメインの構造を記述するための汎用言語** �
 block    = header "{{" body "}}"
 
 ; === 拡張ポイント (重心) ===
-header   = block-kind / command / variable / event / handler / compose / guard
+header   = block-kind / command / variable / event / named-def
+         / handler / compose / guard
 body     = <opaque>  ; 内部構造は 01-syntax-core の 1.2 を参照
 
 ; === 種別は sigil で決まる (語ではない) ===
@@ -90,7 +91,8 @@ block-kind = "%" identifier          ; %dsl %define %rule %input %output %profil
 command    = "/" identifier
 variable   = [scope] ":" identifier
 event      = "#" identifier
-scope      = "@" identifier          ; @session
+named-def  = label-name              ; sigil を持たない定義 (rule / constraint / field …)
+scope      = "@" identifier          ; @session @scoped
 handler    = "<-" "#" identifier     ; イベントを受ける
 compose    = "+" "/" identifier ("^" / "$")
 guard      = "(" [condition] ")"

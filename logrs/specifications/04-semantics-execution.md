@@ -1,7 +1,7 @@
 ---
 title: Part 2 (後半) — 実行意味論
 description: 実行規約、実行順序、合成、イベントシステム、構文要素の意味、停止条件、フォールバック規則
-version: 0.7.0
+version: 0.8.0
 update: 2026-09-20
 ---
 
@@ -30,8 +30,10 @@ definitions を先頭から順に評価する
 <<<
 
     constraint sequential_evaluation: <<<
-i < j のとき def_i は def_j より先に評価されなければならない
-前方参照は許可されない
+1 つの unit の中では、i < j のとき def_i は def_j より先に評価される
+同一 unit 内での前方参照は許可されない
+unit をまたぐ参照はこの制約の対象外であり、
+すべての unit を読み込んだのちに解決する
 <<<
 
   }}
@@ -154,7 +156,7 @@ semantics : ハイブリッド (形式 + 暗黙知)
     :temp_var      <- _
     :result        <- "value"
     ! "処理内容"
-    :session_phase <- 次モード
+    :session_phase <- waiting
   }}
 
   ; クリアの形式
@@ -192,7 +194,7 @@ semantics : ハイブリッド (形式 + 暗黙知)
   /complex {{
     :temp          <- _
     :result        <- "value"
-    :session_phase <- processing
+    :session_phase <- waiting
     ! "処理内容"
   }}
 
@@ -274,13 +276,13 @@ insertion_sequence = [合成_1, 合成_2, ..., 合成_n]
 insertion_sequence は定義の出現順に並ぶ
 <<<
 
-    note: <<<
+    forward_order: <<<
 前方 (`^`) の実行順 (LIFO / スタック):
 insertion_sequence を逆順にたどって本体を実行する
 effect: "最後に定義したものが最初に実行される"
 <<<
 
-    note: <<<
+    backward_order: <<<
 後方 (`$`) の実行順 (FIFO / キュー):
 insertion_sequence を定義順にたどって本体を実行する
 effect: "最初に定義したものが最初に実行される"
@@ -300,17 +302,15 @@ effect: "最初に定義したものが最初に実行される"
 インターリーブは許可されない
 <<<
 
-    note: "この順序は一般的な AOP / ミドルウェアパターンと一致します"
-      note: <<<
+    note: <<<
+この順序は一般的な AOP / ミドルウェアパターンと一致する:
 - 前方 (`^`) = 前処理フック (最後に追加したフックが最初に実行)
 - 後方 (`$`) = 後処理フック (最初に追加したフックが最初に実行)
 <<<
 
   }}
-  note: <<<
-rule composition priority extension (将来のための予約):
-<<<
-    status: "未実装"
+  rule composition priority extension {{
+    status:      "未実装"
     reservation: "優先度属性による明示的な順序制御"
 
     current_behavior: "実行順は定義順のみで決まる"
@@ -319,6 +319,7 @@ rule composition priority extension (将来のための予約):
 +/cmd ^ --priority: <integer>: <body>
 +/cmd $ --priority: <integer>: <body>
 <<<
+
     reserved_semantics: <<<
 execution_order: priority 値の昇順に並べる
 higher_priority: lower_priority より先に実行する
@@ -327,11 +328,13 @@ priority_tie: 定義順にフォールバックする
 
     purpose: "構文を予約して将来の破壊的変更を防ぐ"
 
-    note: "この拡張は現在未実装です。この記述は将来の拡張のための構文予約であり、"
-          note: <<<
-現在のパーサーはこの構文を受理しません。
+    note: <<<
+この拡張は現在未実装である。
+上の reserved_syntax は将来の拡張のための構文予約であり、
+現在のパーサーはこの構文を受理しない。
 <<<
 
+  }}
   rule composition constraint composition {{
     syntax: "合成ブロックは constraint 句を含んでよい"
 
@@ -382,8 +385,17 @@ composed_constraints = :session_phase == waiting, :buffer が空でない
 %define {{
 
   ; イベント型定義
-  #ProcessStarted (command: text, mode: mode) {{ }}
-  #ProcessInterrupted (reason: text, previous_mode: mode) {{ }}
+  #ProcessStarted     (command: text, mode: text) {{ }}
+  #ProcessInterrupted (reason: text, previous_mode: text) {{ }}
+  #ProcessCompleted   (result: text) {{ }}
+  #ProcessFailed      (error: text) {{ }}
+  #UserInputReceived  (input: text) {{ }}
+  #InputCompleted     {{ }}
+  #ErrorRecovered     {{ }}
+
+  ; ハンドラが参照する変数
+  @session :previous_mode {{ clearby: "/exit" }}
+  @session :remark        {{ clearby: "/exit" }}
 
   ; イベント発火
   /start_process {{
@@ -429,7 +441,7 @@ composed_constraints = :session_phase == waiting, :buffer が空でない
 
     }}
     %example forbidden {{
-      <-#SomeEvent {{
+      <-#UserInputReceived {{
         :session_phase <- input             ; 通常フローはコマンドで行うべき
       }}
 
@@ -445,13 +457,22 @@ composed_constraints = :session_phase == waiting, :buffer が空でない
 ```text
 %define {{
 
-  ; :session_phase — 状態機械定義 (左から右へ遷移可能、最初が初期状態)
+  ; :session_phase — 状態機械定義
   :session_phase {{
-    state1 -> "状態1"
-    state2 -> "状態2"
-    state3 -> "状態3"
+    command -> "コマンド"
+    input   -> "入力"
+    waiting -> "待機"
 
-    :initial_session_phase <- state1
+    :initial_session_phase <- command
+
+    ; 許可された遷移。ここに現れない経路は禁止遷移である
+    transitions {{
+      command => input      ; /begin
+      waiting => input      ; /begin
+      input   => waiting    ; /end
+      input   => command    ; /exit
+      waiting => command    ; /exit
+    }}
   }}
 
   ; `->` — 識別子の表示名定義
@@ -641,8 +662,8 @@ level はそのうち「置けない」側の軸である
     }}
     rule priority vs rule disambiguation {{
       type_distinction {{
-        priority => 優先度レベルの定義 (判断材料)
-        rule     => 制約・検証規則の定義 (構造的制約)
+        priority => "優先度レベルの定義 (判断材料)"
+        rule     => "制約・検証規則の定義 (構造的制約)"
 
       }}
       semantic_role: <<<
@@ -662,7 +683,7 @@ rule     : 構造的制約を課す
 
     core_fields {{
       field content: text
-      field importance: priority_level
+      field importance: level    ; priority ブロックが宣言する位階軸
     }}
 
     note: <<<
@@ -825,19 +846,6 @@ Markdown の箇条書き形式 ("-" で始まる行)
     }}
 
   }}
-  rule constraint composition {{
-    insert_capability: "合成ブロックは constraint ラベルを含んでよい"
-
-    composition_semantics: <<<
-複数の constraint は論理積で結合される
-original_constraints = 元の定義ブロックの制約
-insert_constraints   = 合成ブロックの制約
-combined = original_constraints and insert_constraints
-<<<
-
-    enforcement: "すべての制約 (元の定義 + 合成による追加) が満たされなければならない"
-
-  }}
 }}
 ```
 
@@ -877,7 +885,7 @@ llm が文脈と暗黙知から停止を判断する
       note: <<<
 1. !#ProcessFailed を発火する
 2. 欠けている情報を「Open Questions」として出力する
-3. :status <- incomplete
+3. 不足している情報を :remark に記録する
 4. :session_phase を安全な状態 (command または waiting) に戻す
 <<<
 
@@ -980,11 +988,11 @@ llm が仕様を守らない場合の縮退動作を定義します。
 
 #### コマンド解釈失敗時
 
-| 状況               | フォールバック動作                  | acceptance / execute_mode |
-| ------------------ | ----------------------------------- | ------------------------- |
-| コマンド不明       | 既定モードに縮退                    | `:acceptance <- pending`  |
-| パラメータ欠落     | デフォルト値使用 (全セクション対象) | 現状維持                  |
-| コマンド構文エラー | エラー通知 → `/begin` 再入力促進    | `:acceptance <- pending`  |
+| 状況               | フォールバック動作               | :session_phase / :execute_mode |
+| ------------------ | -------------------------------- | ------------------------------ |
+| コマンド不明       | 既定の動作に縮退                 | `:session_phase <- command`    |
+| パラメータ欠落     | デフォルト値使用                 | 現状維持                       |
+| コマンド構文エラー | エラー通知 → `/begin` 再入力促進 | `:session_phase <- command`    |
 
 **フォールバック例**:
 
@@ -1016,11 +1024,11 @@ llm が仕様を守らない場合の縮退動作を定義します。
 
 #### 状態遷移違反時
 
-| 状況                | フォールバック動作                  | acceptance / execute_mode |
-| ------------------- | ----------------------------------- | ------------------------- |
-| acceptance 自動遷移 | `:acceptance <- pending` に強制復帰 | `@session` 保持           |
-| execute_mode 再入   | 実行拒否 → エラー通知               | 現状維持                  |
-| 禁止遷移試行        | 遷移キャンセル → 警告出力           | 現状維持                  |
+| 状況                       | フォールバック動作                    | :session_phase / :execute_mode |
+| -------------------------- | ------------------------------------- | ------------------------------ |
+| 暗黙の :session_phase 遷移 | 遷移キャンセル → 警告出力             | 現状維持、`@session` 保持      |
+| :execute_mode 再入         | 実行拒否 → エラー通知                 | 現状維持                       |
+| 禁止遷移試行               | 遷移キャンセル → `transitions` を提示 | 現状維持                       |
 
 **note**: 状態遷移違反は重大エラーです。処理を中断し、ユーザー介入を要求します。
 
@@ -1054,24 +1062,17 @@ llm が仕様を守らない場合の縮退動作を定義します。
 %define {{
 
   fallback ValidationFailed {{
-    :generation-status <- incomplete
     !#ProcessFailed (error: "[UNRESOLVED:buffer]")
-    :acceptance <- pending
+    :session_phase <- command
     ! "Open Questions 出力: 必須情報が不足しています"
   }}
 
   fallback CommandNotFound {{
-    ! "警告: 不明なコマンドを検出。既定モードに縮退します"
-    :acceptance <- pending
+    ! "警告: 不明なコマンドを検出。既定の動作に縮退します"
+    :session_phase <- command
     note: <<<
 /process        ; 既定コマンドにフォールバック
 <<<
-  }}
-
-  fallback CategoryUnknown {{
-    :category <- "[category:unknown]"
-    :priority <- "B"       ; 保守的優先度
-    note: "判定不能時のデフォルト分類"
   }}
 
 }}

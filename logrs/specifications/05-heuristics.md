@@ -1,7 +1,7 @@
 ---
 title: Part 3 — Heuristics -> "スタイル指針"
 description: 命名規則、レイアウトの慣習、実行文の運用指針
-version: 0.7.0
+version: 0.8.0
 update: 2026-09-20
 ---
 
@@ -31,7 +31,7 @@ update: 2026-09-20
           recommended-style: "snake_case"
         }}
         examples {{
-          session-phase: "command, input, waiting, processing"
+          session-phase: "command, input, waiting"
           variable: "変数には \":\" プレフィックスが必須 (:buffer, :user_name)"
           event: "PascalCase を許可する (#ProcessStarted)"
         }}
@@ -56,7 +56,7 @@ update: 2026-09-20
       usage-guideline {{
         use: <<<
 別名 (->) を使う場面:
-  - ユーザーから見える状態名 (:session_phase, :acceptance, :execute_mode)
+  - ユーザーから見える状態名 (:session_phase, :execute_mode)
   - 主要なセクションの見出し
   - 日本語での補足が必要な重要概念
 <<<
@@ -271,7 +271,7 @@ problem_essence -> "問題の本質":
         %example anti_pattern -> "禁止: ペイロードに応じた動的な :session_phase 選択" {{
           <-#ProcessCompleted {{
             ; 結果の内容に応じて :session_phase を変える
-            :session_phase <- :next_mode
+            :session_phase <- :previous_mode
           }}
         }}
 
@@ -288,8 +288,8 @@ problem_essence -> "問題の本質":
       }}
       pattern arbitrary_transition {{
         %example anti_pattern -> "禁止: 定義された遷移を無視した遷移" {{
-          <-#CustomEvent {{
-            :session_phase <- waiting    ; input => waiting (禁止された遷移) を実現している
+          <-#ProcessCompleted {{
+            :session_phase <- waiting    ; input => waiting は /end の責務。ハンドラで実現している
           }}
         }}
 
