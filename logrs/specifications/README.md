@@ -90,7 +90,9 @@ Logrs DSL は、**ドメインの構造を記述するための汎用言語** �
 }}
 ```
 
-`%example` は `<block-kind> ::= "%" <identifier> [<identifier>] *<modifier> [<alias>]` そのものなので、**新しい文法を足していません**。足したのは意味論で、メタブロックの「定義登録」を種別ごとの性質にあらため、`%example` だけを登録対象から外しました。入れ子には再帰的に伝播します。詳細は [02-syntax-metablock の `%example`](./02-syntax-metablock.md#example--登録されない例示) を参照してください。
+`%example` は `<block-kind> ::= "%" <identifier> [<identifier>] *<modifier> [<alias>]` そのものなので、**新しい文法を足していません**。
+足したのは意味論で、メタブロックの「定義登録」を種別ごとの性質にあらため、`%example` だけを登録対象から外しました。入れ子には再帰的に伝播します。
+詳細は [02-syntax-metablock の `%example`](./02-syntax-metablock.md#example--登録されない例示) を参照してください。
 
 ### heredoc はネストしない — 例示は heredoc の外に書く
 
@@ -135,7 +137,8 @@ priority: A >> B >> C >> D >> E        ; 位階軸の宣言
 (:severity >> medium) {{ … }}          ; 条件式の項
 ```
 
-左が上位です。**同位は表現しません** (位階は全順序)。`<<` はありません。詳細は [1.1.5 位階](./01-syntax-core.md#115-位階) と [位階の意味論](./03-semantics-core.md#位階の意味論) を参照してください。
+左が上位です。位階は全順序で、**同位を表す手段はありません**。逆向きの `<<` も用意していません。
+詳細は [1.1.5 位階](./01-syntax-core.md#115-位階) と [位階の意味論](./03-semantics-core.md#位階の意味論) を参照してください。
 
 `>` との違いは解決規則です。`>` は両辺を数値として解釈してから比べます。`>>` は宣言された並びの中での位置で比べるもので、値を数値に解釈しません。位階を表すために `1` `2` `3` を振る必要はなくなります。
 
@@ -149,8 +152,10 @@ priority: A >> B >> C >> D >> E        ; 位階軸の宣言
 
 ### 適用箇所
 
-- `03-semantics-core` の `constraint priority values` (A〜E) を `priority: A >> B >> C >> D >> E` に上げ、説明は説明層に残した
-- `04-semantics-execution` の `priority` ブロックに `level: critical >> high >> medium >> low` を置き、`level_definitions` の説明文はそのまま残した
+- `03-semantics-core` の `constraint priority values` (A〜E) を
+  `priority: A >> B >> C >> D >> E` に上げ、説明は説明層に残した
+- `04-semantics-execution` の `priority` ブロックに
+  `level: critical >> high >> medium >> low` を置き、`level_definitions` の説明文はそのまま残した
 
 ## v0.5.1 の変更
 
@@ -171,7 +176,8 @@ BNF は変えていません。02〜05 の記述を v0.5.0 の文法に合わせ
 
 ### 見出し語を複数の語で書ける
 
-`<label-name>` を新設し、`<label-def>` と `<named-def>` の名前部分をこれに置き換えました。`constraint status values:` や `rule composition constraint composition {{` のように、種別と名前を空白で連ねた見出しが文法に含まれます。末尾には数値も置けます (`test_case 1:`)。
+`<label-name>` を新設し、`<label-def>` と `<named-def>` の名前部分をこれに置き換えました。
+`constraint status values:` や `rule composition constraint composition {{` のように、種別と名前を空白で連ねた見出しが文法に含まれます。末尾には数値も置けます (`test_case 1:`)。
 
 ```abnf
 <label-name>      ::= <identifier> *(<identifier> / <number>)
