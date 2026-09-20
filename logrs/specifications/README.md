@@ -53,10 +53,14 @@ Logrs DSL は、**ドメインの構造を記述するための汎用言語** �
 - note の配置「本体の末尾 (文の後、constraint の前)」— 文言自体が矛盾し、`04` は中程に多数置いていた。「本体のどこでもよい」にあらためた
 - 再定義禁止 — 同一ブロック内の重複 `note:` を `forward_order` / `backward_order` に分け、`rule constraint composition` の二重定義を解消した
 - `04` の `rule composition priority extension` がヘッダから `note:` に降格し、本体だった `status:` 以下が `%rule` 直下に露出していた。ブロックに戻した
+- `constraint` の配置「本体の末尾」と書式「Markdown の箇条書き」— `03` / `04` の constraint は単一の文字列リテラルが 7 件あり、heredoc も散文が多い。規則の方が実態と合っていなかったため、note と同じく「本体のどこでもよい」に緩め、書式は文字列リテラルと heredoc の双方を認めた
+- `<-` の前後に空白類を required とする規則が、`<handler>` の `<-#ProcessFailed` を弾いていた。中置としての用法だけを対象とし、ハンドラの前置記号は対象外と明記した
+- `<` `>` `[` `]` `..` を「メタ構文であってオブジェクト言語の記号ではない」と書きながら、`<param>` の BNF は引用符に入れて使っていた。オブジェクト言語の記号と言いあらためた
+- heredoc の先頭除去が「直後の 1 個」(`00` と `01` の一覧) と「最初の改行まで」(`01` の本文) の 2 通りあった。本文の規則に統一した
 
 ### 機械検証を CI に載せた
 
-`scripts/check-spec-syntax.mjs` が `logrs/specifications/*.md` のコードフェンスを走査します。検査項目は、字句クラス外の文字・`<block-kind>` の識別子・リテラル外の非 ASCII・ブロックの対応・未定義シンボル参照です。`pnpm run check:spec` で実行でき、`.github/workflows/ci-spec-check.yml` が PR ごとに走ります。
+`scripts/check-spec-syntax.mjs` が `logrs/specifications/*.md` のコードフェンスを走査します。検査項目は、字句クラス外の文字・`<block-kind>` の識別子・リテラル外の非 ASCII・ブロックの対応・未定義シンボル参照です。`pnpm run check:specs` で実行でき、`.github/workflows/ci-spec-check.yml` が PR ごとに走ります。
 
 意図的に非 DSL のフェンス (構文エラーの提示、`→` `≡` を使う評価表) は、直前に `<!-- logrs-check: skip -->` を置いて除外します。
 
@@ -309,7 +313,7 @@ DSL 定義そのものを構文的に解釈対象外とし、自己再帰リス�
 
 Semantics と Heuristics は、Syntax が定義する構文そのもので記述します (自己記述)。**Syntax 層の生成規則は自己記述の対象外** であり、ABNF を正規のメタ言語とします ([00-overview の設計原則 8](./00-overview.md#設計原則))。
 
-例示の隔離は v0.7.0 の [`%example`](./02-syntax-metablock.md#example--登録されない例示) で、[1.2 統一 BNF](./01-syntax-core.md#12-統一-bnf) による受理性は v0.8.0 で解決しました。`pnpm run check:spec` が 02〜05 のコードフェンスを機械検証しています。
+例示の隔離は v0.7.0 の [`%example`](./02-syntax-metablock.md#example--登録されない例示) で、[1.2 統一 BNF](./01-syntax-core.md#12-統一-bnf) による受理性は v0.8.0 で解決しました。`pnpm run check:specs` が 02〜05 のコードフェンスを機械検証しています。
 
 残る未達は言語機能の不足です。コードフェンスの 46% が heredoc 本文であり、構文が担っているのは容器だけで内容はほぼ自然言語です ([v0.8.0 の残る未達](#残る未達))。
 
